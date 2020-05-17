@@ -46,8 +46,9 @@ app.get('/wiki/**', (req, res) => {
 // failure response: {status: 'error', message: 'Page does not exist.'}
 app.get('/api/page/:slug', async (req,res)=> {
   console.log(req.params);
+  let fileContent;  
   try{
- const fileContent = await fs.readFile(DATA_DIR +"/"+ req.params.slug + ".md","utf8");
+  fileContent = await fs.readFile(DATA_DIR +"/"+ req.params.slug + ".md","utf8");
 } catch(e){
   //terrible work around but it eventually works :)
     fileContent =  await fs.readFile(DATA_DIR +"/"+ req.params.slug,"utf8");
@@ -81,10 +82,15 @@ app.get('/api/page/:slug', async (req,res)=> {
 // failure response: no failure response
 
 app.get('/api/pages/all', async (req, res) => {
-  const names = await fs.readdir(DATA_DIR);
-    
-  console.log(names);
-  jsonOK(res, {"pages": names});
+  let names;
+  try{
+    names = await fs.readdir(DATA_DIR);
+  } catch(e){
+    console.error(e);
+    jsonError(res,e);
+    return;
+  }
+  jsonOK(res, {"pages": names.map(x=> x.replace(".md",""))});
 });
 
 const port = process.env.PORT || 5000;
